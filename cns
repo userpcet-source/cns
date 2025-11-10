@@ -1,0 +1,887 @@
+assignment 1
+
+caeser
+
+
+#include <iostream>
+#include <string>
+using namespace std;
+
+string caesarEncrypt(string text, int key) {
+    string result = "";
+    for (char c : text) {
+        if (isalpha(c)) {
+            char base = isupper(c) ? 'A' : 'a';
+            result += char((c - base + key) % 26 + base);
+        } else {
+            result += c;
+        }
+    }
+    return result;
+}
+
+string caesarDecrypt(string text, int key) {
+    return caesarEncrypt(text, 26 - key);
+}
+
+int main() {
+    string text = "";
+    cout<<"Enter the text to encrypt"<<endl;
+    cin>>text;
+    int key = 3;
+    cout<<"Enter the key for Caesar Cipher"<<endl;
+    cin>>key;
+    string cipher = caesarEncrypt(text, key);
+    cout << "Ciphertext: " << cipher << endl;
+    cout << "Decrypted: " << caesarDecrypt(cipher, key) << endl;
+    return 0;
+}
+
+
+
+monocrypt
+
+#include <iostream>
+#include <string>
+using namespace std;
+
+string alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+string keyMap = "QWERTYUIOPASDFGHJKLZXCVBNM";
+
+string monoEncrypt(string text) {
+    string cipher = "";
+    for (char c : text) {
+        if (isalpha(c)) {
+            char up = toupper(c);
+            int index = alpha.find(up);
+            cipher += keyMap[index];
+        } else {
+            cipher += c;
+        }
+    }
+    return cipher;
+}
+
+string monoDecrypt(string cipher) {
+    string text = "";
+    for (char c : cipher) {
+        if (isalpha(c)) {
+            char up = toupper(c);
+            int index = keyMap.find(up);
+            text += alpha[index];
+        } else {
+            text += c;
+        }
+    }
+    return text;
+}
+
+
+vigenere
+
+#include <iostream>
+#include <string>
+using namespace std;
+
+string vigenereEncrypt(string text, string key) {
+    string result = "";
+    for (int i = 0; i < text.size(); i++) {
+        char c = toupper(text[i]);
+        if (isalpha(c)) {
+            char k = toupper(key[i % key.size()]);
+            result += (((c - 'A') + (k - 'A')) % 26 + 'A');
+        } else result += c;
+    }
+    return result;
+}
+
+string vigenereDecrypt(string cipher, string key) {
+    string result = "";
+    for (int i = 0; i < cipher.size(); i++) {
+        char c = toupper(cipher[i]);
+        if (isalpha(c)) {
+            char k = toupper(key[i % key.size()]);
+            result += (((c - 'A') - (k - 'A') + 26) % 26 + 'A');
+        } else result += c;
+    }
+    return result;
+}
+
+
+
+
+
+int main() {
+    string text = "";
+    string key = "";
+    cout<<"Enter the text to encrypt"<<endl;
+    cin>>text;
+    cout<<"Enter the key"<<endl;
+    cin>>key;
+    string cipher = vigenereEncrypt(text, key);
+    cout << "Ciphertext: " << cipher << endl;
+    cout << "Decrypted: " << vigenereDecrypt(cipher, key) << endl;
+    return 0;
+}
+
+
+railfence 
+
+#include <iostream>
+#include <string>
+#include <vector>
+using namespace std;
+
+string railFenceEncrypt(string text, int rails) {
+    vector<string> fence(rails);
+    int row = 0, dir = 1;
+    for (char c : text) {
+        fence[row] += c;
+        if (row == 0) dir = 1;
+        else if (row == rails - 1) dir = -1;
+        row += dir;
+    }
+    string result = "";
+    for (string r : fence) result += r;
+    return result;
+}
+
+string railFenceDecrypt(string cipher, int rails) {
+    vector<vector<int>> pos(rails, vector<int>(cipher.size(), 0));
+    int row = 0, dir = 1;
+    for (int i = 0; i < cipher.size(); i++) {
+        pos[row][i] = 1;
+        if (row == 0) dir = 1;
+        else if (row == rails - 1) dir = -1;
+        row += dir;
+    }
+
+    int index = 0;
+    vector<vector<char>> fill(rails, vector<char>(cipher.size()));
+    for (int r = 0; r < rails; r++) {
+        for (int c = 0; c < cipher.size(); c++) {
+            if (pos[r][c] == 1) fill[r][c] = cipher[index++];
+        }
+    }
+
+    string result = "";
+    row = 0, dir = 1;
+    for (int i = 0; i < cipher.size(); i++) {
+        result += fill[row][i];
+        if (row == 0) dir = 1;
+        else if (row == rails - 1) dir = -1;
+        row += dir;
+    }
+    return result;
+}
+
+int main() {
+    string text = "";
+    int rails;
+    cout<<"Enter the text"<<endl;
+    cin>>text;
+    cout<<"Enter the number of rails"<<endl;
+    cin>>rails;
+    string cipher = railFenceEncrypt(text, rails);
+    cout << "Ciphertext: " << cipher << endl;
+    cout << "Decrypted: " << railFenceDecrypt(cipher, rails) << endl;
+    return 0;
+}
+
+
+
+vernam 
+
+#include <iostream>
+#include <string>
+using namespace std;
+
+string vernamEncrypt(string plaintext, string key) {
+    string cipher = "";
+    for (int i = 0; i < plaintext.size(); i++) {
+        cipher += char((plaintext[i] ^ key[i]) + 'a');   // fixed: cast to char properly
+    }
+    return cipher;
+}
+
+string vernamDecrypt(string cipher, string key) {
+    string result = "";
+    for (int i = 0; i < cipher.size(); i++) {
+        result += char((cipher[i] - 'a') ^ key[i]);      // fixed: subtract 'a' before XOR
+    }
+    return result;
+}
+
+int main() {
+    string plaintext;
+    cout << "Enter plaintext: ";
+    cin >> plaintext;
+
+    string key;
+    cout << "Enter key: ";
+    cin >> key;
+
+    if (key.size() < plaintext.size()) {
+        cout << "Error: key must be at least as long as plaintext!" << endl;
+        return 0;
+    }
+
+    string cipher = vernamEncrypt(plaintext, key);
+    cout << "Cipher text: " << cipher << endl;
+
+    cout << "Decrypted text: " << vernamDecrypt(cipher, key) << endl;
+    return 0;
+}
+
+
+assignment 2 
+
+
+
+#include<iostream> 
+using namespace std; 
+#include<bits/stdc++.h> 
+int modExp(int base,int powo,int mod){ 
+    int result=1; 
+    base=base%mod; 
+     
+    while(powo>0){ 
+        if(powo & 1){ 
+            result=(result*base)%mod; 
+        } 
+        base=(base*base)%mod; 
+        powo=powo>>1; 
+    } 
+    return result; 
+} 
+int modInverse(int e, int phi ){ 
+     
+    for (int d=2;d<phi;d++){ 
+        if((1LL*e*d)%phi==1){ 
+            return d; 
+        } 
+    } 
+    return -1; 
+} 
+void generateKeys(int p,int q,int &e,int &d,int &n){ 
+    n=p*q; 
+     
+    int phi=(p-1)*(q-1); 
+    for(e=2;e<phi;e++){ 
+        if(__gcd(e,phi)==1){ 
+            break; 
+        } 
+    } 
+    d=modInverse(e,phi); 
+     
+} 
+int main(){ 
+    int p,q,e,d,n; 
+    cout<<"Enter 2 prime number p and q:"<<endl; 
+    cin>>p; 
+    cin>>q; 
+    auto start_key=chrono::high_resolution_clock::now(); 
+     
+    generateKeys(p,q,e,d,n); 
+    auto end_key=chrono::high_resolution_clock::now(); 
+    auto key_time=chrono::duration_cast<chrono::microseconds>(end_key-start_key).count(); 
+    cout<<"Public key(e,n)"<<"("<<e<<","<<n<<")"<<endl; 
+    cout<<"Private key(e,n)"<<"("<<d<<","<<n<<")"<<endl; 
+    cout<<"Time taken for key generation:"<<key_time<<endl; 
+     
+    int M; 
+    cout<<"Enter message(M<n):"<<endl; 
+    cin>>M; 
+    cout<<"Original message:"<<M<<endl; 
+     
+    auto start_enc=chrono::high_resolution_clock::now(); 
+    int C=modExp(M,e,n); 
+    auto end_enc=chrono::high_resolution_clock::now(); 
+    auto total_enc=chrono::duration_cast<chrono::microseconds>(end_enc-start_enc).count(); 
+     
+    cout<<"Encrypt message:"<<C<<endl; 
+    cout<<"Time: "<<total_enc<<endl; 
+     
+    auto dec_start=chrono::high_resolution_clock::now(); 
+    int D=modExp(C,d,n); 
+    auto dec_end=chrono::high_resolution_clock::now(); 
+    auto total_dec=chrono::duration_cast<chrono::microseconds>(dec_end-dec_start).count(); 
+     
+    cout<<"Decrypt message:"<<D<<endl; 
+    cout<<"Time"<<total_dec<<endl; 
+     
+     
+} 
+
+
+
+assignment 3  
+
+
+
+
+#include <iostream>
+#include <string>
+using namespace std;
+
+string encrypt(string text, string key) {
+    string cipher = "";
+    int keyLength = key.length();
+    
+    for (int i = 0; i < text.length(); i++) {
+        char ch = text[i];
+        
+        char k = key[i % keyLength];
+        ch = (ch + k) % 256;  
+        cipher += ch;
+    }
+    return cipher;
+}
+
+
+string decrypt(string cipher, string key) {
+    string plain = "";
+    int keyLength = key.length();
+    
+    for (int i = 0; i < cipher.length(); i++) {
+        char ch = cipher[i];
+        char k = key[i % keyLength];
+        ch = (ch - k + 256) % 256;
+        plain += ch;
+    }
+    return plain;
+}
+
+int main() {
+    string text, key, cipher, decrypted;
+
+    cout << "Enter text to encrypt: ";
+    getline(cin, text);
+
+    cout << "Enter encryption key: ";
+    getline(cin, key);
+
+    cipher = encrypt(text, key);
+    cout << "Encrypted Text: " << cipher << endl;
+
+    decrypted = decrypt(cipher, key);
+    cout << "Decrypted Text: " << decrypted << endl;
+
+    return 0;
+}
+
+
+
+assignment 4
+
+
+
+#include<iostream>
+using namespace std;
+#include<bits/stdc++.h>
+
+long long modExp(long long base,long long powo,long long mod){
+    long long result=1;
+    base=base%mod;
+    while(powo>0){
+        if( powo & 1) result=(result*base)%mod;
+        base=(base*base)%mod;
+        powo=powo>>1;
+    }
+    return result;
+}
+int main(){
+    long long n;
+    cout<<"Enter a prime no:";
+    cout<<endl;
+    cin>>n;
+    long long g;
+    cout<<"Enter primitive root: "<<endl;
+    cin>>g;
+    
+    long long x;
+    cout<<"Enter alice private value: "<<endl;
+    cin>>x;
+    
+    long long y;
+    cout<<"Enter bob private value: "<<endl;
+    cin>>y;
+    
+    //compute public values
+    long long A=modExp(g,x,n);
+    long long B=modExp(g,y,n);
+    
+    cout<<"Alice send (A) public(key)to bob:"<<A<<endl;
+    cout<<"Bob send (B) public(key)to Alice:"<<B<<endl;
+    
+    long long k1=modExp(B,x,n);
+    long long k2=modExp(A,y,n);
+    
+    cout<<"Shared key computed by alice "<<k1<<endl;
+    cout<<"Shared key computed by bob "<<k2<<endl;
+    
+    //-----Man In Middle Attack------
+    
+    long long z;
+    cout<<"Enter private value of Eve: "<<endl;
+    cin>>z;
+    
+    long long E=modExp(g,z,n);
+    cout<<"Alice would send A to Bob:"<<A<<"(intercept by Eve)"<<endl;
+    cout<<"Bob would send B to Alice "<<B<<"(intercept by Eve)"<<endl;
+    cout<<"Eve wound send E to alice"<<E<<"(Pretending to be Bob)"<<endl;
+    cout<<"Eve would send E to Bob"<<E<<"(Pretending to be Alice)"<<endl;
+    
+    long long A1=modExp(E,x,n);
+    long long B1=modExp(E,y,n);
+    long long E1=modExp(A,z,n);
+    long long E2=modExp(B,z,n);
+    
+    cout << "Alice's computed secret (eve) = " << A1 << endl;
+    cout << "Eve's secret with Alice   = " << E1 << endl;
+    cout << "Bob's   computed secret (with Eve) = " << B1 << endl;
+    cout << "Eve's secret with Bob     = " << E2 << endl;
+    
+
+    
+}
+
+
+
+
+
+
+
+assignment 5
+
+
+
+
+import hashlib
+
+def sender(message):
+    # Convert message to bytes
+    data = message.encode()
+    
+    # Compute SHA-1 using crypto library
+    digest = hashlib.sha1(data).hexdigest()
+    
+    print("\nSender:")
+    print("Message:", message)
+    print("SHA-1 Hash:", digest)
+    
+    return data, digest
+
+
+def receiver(data, digest):
+    print("\nReceiver:")
+    
+    # Recompute hash on received data
+    new_digest = hashlib.sha1(data).hexdigest()
+    
+    print("Received Hash:", digest)
+    print("Recomputed Hash:", new_digest)
+    
+    # Check integrity
+    if digest == new_digest:
+        print("Integrity Verified: Message Not Altered")
+    else:
+        print("Integrity Check Failed: Message Altered")
+
+
+if _name_ == "_main_":
+    message = input("Enter message to transmit: ")
+    
+    data, digest = sender(message)
+    receiver(data, digest)
+
+
+
+
+
+
+assignment 6
+
+
+sender.py
+
+
+import random
+import hashlib
+import json
+from pathlib import Path
+
+def is_prime(num):
+    if num <= 1:
+        return False
+    for i in range(2, int(num**0.5) + 1):
+        if num % i == 0:
+            return False
+    return True
+
+def gcd(a, b):
+    while b != 0:
+        a, b = b, a % b
+    return a
+
+def mod_inverse(a, m):
+    a %= m
+    for i in range(1, m):
+        if (a * i) % m == 1:
+            return i
+    return None
+
+def generate_keypair():
+    p = q = 1
+    while not is_prime(p):
+        p = random.randint(100, 300)
+    while not is_prime(q) or p == q:
+        q = random.randint(100, 300)
+    n = p * q
+    phi = (p - 1) * (q - 1)
+    e = random.randint(2, phi - 1)
+    while gcd(e, phi) != 1:
+        e = random.randint(2, phi - 1)
+    d = mod_inverse(e, phi)
+    # ensure d found; if not, regenerate (very rare for our small range)
+    while d is None:
+        e = random.randint(2, phi - 1)
+        while gcd(e, phi) != 1:
+            e = random.randint(2, phi - 1)
+        d = mod_inverse(e, phi)
+    return (e, n), (d, n)
+
+def rsa_encrypt(message, key):
+    k, n = key
+    return [pow(ord(ch), k, n) for ch in message]
+
+def rsa_decrypt(cipher, key):
+    k, n = key
+    return ''.join([chr(pow(c, k, n)) for c in cipher])
+
+def sign_message(message, private_key):
+    h = hashlib.sha256(message.encode()).hexdigest()
+    return [pow(ord(ch), private_key[0], private_key[1]) for ch in h]
+
+def save_json(path, obj):
+    with open(path, 'w') as f:
+        json.dump(obj, f)
+
+def load_json(path):
+    with open(path, 'r') as f:
+        return json.load(f)
+
+receiver_pub_file = Path("receiver_pub.json")
+if not receiver_pub_file.exists():
+    print("receiver_pub.json not found. Run receiver.py first to generate receiver's keys.")
+    exit(1)
+
+receiver_pub = tuple(load_json(receiver_pub_file))
+sender_pub, sender_priv = generate_keypair()
+save_json("sender_pub.json", list(sender_pub))
+save_json("sender_priv.json", list(sender_priv))
+
+msg = input("Enter message to send: ")
+
+enc = rsa_encrypt(msg, receiver_pub)
+sig = sign_message(msg, sender_priv)
+
+save_json("enc_message.json", enc)
+save_json("signature.json", sig)
+
+print("\nEncrypted message saved to enc_message.json")
+print("Signature saved to signature.json")
+print("Sender public key saved to sender_pub.json")
+
+
+
+receiver.py
+
+
+import random
+import hashlib
+import json
+from pathlib import Path
+
+def is_prime(num):
+    if num <= 1:
+        return False
+    for i in range(2, int(num**0.5) + 1):
+        if num % i == 0:
+            return False
+    return True
+
+def gcd(a, b):
+    while b != 0:
+        a, b = b, a % b
+    return a
+
+def mod_inverse(a, m):
+    a %= m
+    for i in range(1, m):
+        if (a * i) % m == 1:
+            return i
+    return None
+
+def generate_keypair():
+    p = q = 1
+    while not is_prime(p):
+        p = random.randint(100, 300)
+    while not is_prime(q) or p == q:
+        q = random.randint(100, 300)
+    n = p * q
+    phi = (p - 1) * (q - 1)
+    e = random.randint(2, phi - 1)
+    while gcd(e, phi) != 1:
+        e = random.randint(2, phi - 1)
+    d = mod_inverse(e, phi)
+    while d is None:
+        e = random.randint(2, phi - 1)
+        while gcd(e, phi) != 1:
+            e = random.randint(2, phi - 1)
+        d = mod_inverse(e, phi)
+    return (e, n), (d, n)
+
+def rsa_decrypt(cipher, key):
+    k, n = key
+    return ''.join([chr(pow(c, k, n)) for c in cipher])
+
+def rsa_encrypt(message, key):
+    k, n = key
+    return [pow(ord(ch), k, n) for ch in message]
+
+def verify_signature(message, signature, sender_pub):
+    h = hashlib.sha256(message.encode()).hexdigest()
+    decrypted = ''.join([chr(pow(c, sender_pub[0], sender_pub[1])) for c in signature])
+    return decrypted == h
+
+def save_json(path, obj):
+    with open(path, 'w') as f:
+        json.dump(obj, f)
+
+def load_json(path):
+    with open(path, 'r') as f:
+        return json.load(f)
+
+if not Path("receiver_pub.json").exists() or not Path("receiver_priv.json").exists():
+    pub, priv = generate_keypair()
+    save_json("receiver_pub.json", list(pub))
+    save_json("receiver_priv.json", list(priv))
+    print("Receiver keys generated and saved as receiver_pub.json and receiver_priv.json")
+else:
+    print("Receiver keys already exist.")
+
+if Path("enc_message.json").exists() and Path("signature.json").exists() and Path("sender_pub.json").exists():
+    enc = load_json("enc_message.json")
+    sig = load_json("signature.json")
+    sender_pub = tuple(load_json("sender_pub.json"))
+    receiver_priv = tuple(load_json("receiver_priv.json"))
+
+    received = rsa_decrypt(enc, receiver_priv)
+    print("\nReceived decrypted message:", received)
+
+    ok = verify_signature(received, sig, sender_pub)
+    if ok:
+        print("Signature valid. Integrity verified.")
+    else:
+        print("Signature invalid. Message may be tampered.")
+else:
+    print("No message/signature found. After sender runs, rerun this script to receive.")
+
+
+
+
+assignment 7
+
+
+
+index.html
+
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+</head>
+<body>
+<div class="container">
+  <h2>Login</h2>
+
+  <input type="text" id="username" placeholder="Enter Username">
+  <input type="password" id="password" placeholder="Enter Password">
+  <button id="loginBtn" onclick="login()">Login</button>
+  <a href="register.html">Create New Account</a>
+</div>
+
+<script>
+function login() {
+var user = document.getElementById("username").value; var pass = document.getElementById("password").value;
+
+var storedUser = localStorage.getItem("username"); var storedPass = localStorage.getItem("password");
+
+// Hash input password to compare
+var hashedPass = CryptoJS.SHA256(pass).toString();
+
+if(user == storedUser && hashedPass == storedPass) { alert("Login Successful! Welcome " + user);
+} else {
+alert("Incorrect username or password.");
+}
+}
+</script>
+</body>
+</html>
+
+
+
+register.html
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Register</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+</head>
+<body>
+<div class="container">
+  <h2>Register</h2>
+
+  <input type="text" id="username" placeholder="Enter Username">
+  <input type="password" id="password" placeholder="Enter Password">
+  <button onclick="register()">Register</button>
+
+  <a href="index.html">Already have an account? Login</a>
+</div>
+
+<script>
+function register() {
+  var user = document.getElementById("username").value.trim();
+  var pass = document.getElementById("password").value;
+
+  if(user == "" || pass == "") {
+    alert("Please fill all fields");
+    return;
+  }
+
+  // Hash Password using SHA-256
+  var hashedPass = CryptoJS.SHA256(pass).toString();
+
+  localStorage.setItem("username", user);
+  localStorage.setItem("password", hashedPass);
+  // Reset login attempt state so a new registration isn't blocked by prior lockouts
+  localStorage.setItem('remainingAttempts', '3');
+  localStorage.removeItem('lockoutUntil');
+  console.log("Registered User:", user);
+  alert("Registration Successful!");
+  window.location.href = "index.html";
+}
+</script>
+</body>
+</html>
+
+
+
+
+
+style.css
+
+
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f1f1f1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
+  background: white;
+  padding: 20px 30px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px gray;
+  width: 300px;
+}
+
+input {
+  width: 100%;
+  padding: 8px;
+  margin-top: 10px;
+}
+
+button {
+  width: 100%;
+  padding: 8px;
+  background: #007bff;
+  border: none;
+  margin-top: 15px;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #0056b3;
+}
+
+a {
+  display: block;
+  text-align: center;
+  margin-top: 10px;
+  text-decoration: none;
+}
+
+
+
+
+
+assignment 8
+
+
+
+def encrypt_image(input_path, output_path, shift):
+    with open(input_path, "rb") as file:
+        data = file.read()
+
+    encrypted_data = bytes((byte + shift) % 256 for byte in data)
+
+    with open(output_path, "wb") as file:
+        file.write(encrypted_data)
+
+    print(f"Image encrypted successfully and saved as: {output_path}")
+
+
+def decrypt_image(input_path, output_path, shift):
+    with open(input_path, "rb") as file:
+        data = file.read()
+
+    decrypted_data = bytes((byte - shift) % 256 for byte in data)
+
+    with open(output_path, "wb") as file:
+        file.write(decrypted_data)
+
+    print(f"Image decrypted successfully and saved as: {output_path}")
+
+
+print("1. Encrypt Image")
+print("2. Decrypt Image")
+
+choice = int(input("Enter your choice (1 or 2): "))
+shift = int(input("Enter shift value (1 to 255): "))
+
+if choice == 1:
+    input_path = input("Enter original image path: ")
+    output_path = "encrypted_image.png"
+    encrypt_image(input_path, output_path, shift)
+
+elif choice == 2:
+    input_path = input("Enter encrypted image path: ")
+    output_path = "decrypted_image.png"
+    decrypt_image(input_path, output_path, shift)
+
+else:
+    print("Invalid Choice!")
